@@ -1,9 +1,3 @@
-"""
-Curious comment: this program works on the input string but not on the test.\
-Or at least it does not give the same result as those given in the\
-problem description
-"""
-
 from itertools import permutations
 
 I = list(map(int, open('7.in').read().strip().split(',')))
@@ -18,7 +12,9 @@ for perm in sequences:
     out = 0
     end = False
     idx = [0] * 5
-    PROG = [I[:]] * 5
+    PROG = []
+    for i in range(5):
+        PROG.append(I[:])
     amp = 0
     first_cycle = 5
     while not end:

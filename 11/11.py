@@ -1,11 +1,12 @@
-RIGHT = {(0,1): (1,0), (1,0): (0,-1), (0,-1): (-1,0), (-1,0): (0,1)}
-LEFT = {(0,1): (-1,0), (-1,0): (0,-1), (0,-1): (1,0), (1,0): (0,1)}
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Robot:
-    def __init__(self):
+    def __init__(self, start_panel=0):
         self.dir = (0,1)
         self.table = [[0 for i in range(1000)] for j in range(1000)]
         self.pos = (499, 499)
+        self.table[self.pos[1]][self.pos[0]] = start_panel
         self.colored = set()
 
     def get_color(self):
@@ -23,11 +24,29 @@ class Robot:
         self.dir = RIGHT[self.dir] if turn == 1 else LEFT[self.dir]
         self.pos = self.pos[0] + self.dir[0], self.pos[1] + self.dir[1]
 
+def norm(v):
+    return abs(v[0]) + abs(v[1])
+
+
+def plot(table, colored):
+    # top-left corner and bottom-right corner
+    img = np.array(table)
+
+    tl = min(colored, key=norm)
+    br = max(colored, key=norm)
+
+    img = img[br[1]+10:tl[1]-10:-1, tl[0]-10:br[0]+10]
+    plt.imshow(img)
+    plt.show()
+
+
+RIGHT = {(0,1): (1,0), (1,0): (0,-1), (0,-1): (-1,0), (-1,0): (0,1)}
+LEFT = {(0,1): (-1,0), (-1,0): (0,-1), (0,-1): (1,0), (1,0): (0,1)}
 
 prog = list(map(int, open('11.in').read().strip().split(',')))
 prog.extend([0]*100000)
 
-robot = Robot()
+robot = Robot(start_panel=1)
 
 out = []
 i = 0
@@ -114,4 +133,5 @@ while not end:
 
 
 print(len(robot.colored))
-#print(robot.table[480:520][480:520])
+
+plot(robot.table, robot.colored)

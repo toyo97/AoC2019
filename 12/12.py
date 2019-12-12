@@ -28,36 +28,40 @@ for i,line in enumerate(lines):
         coords[j] = int(coords[j].strip('xyz<>='))
     moons[i, pos] = np.array(coords)
 
-energies = compute_energy(moons[:,pos], moons[:,vel])
 visited = moons[:,:,np.newaxis].copy()
 end = False
 
+repeat = [(0,0) for _ in range(3)]
+
 it = 0
+
+coords = [0,1,2]
+V = [[],[],[]]
+
 while not end:
 
     moons[:,vel] += compute_gravity(moons)
     moons[:,pos] += moons[:,vel]
 
-    new_en = compute_energy(moons[:,pos], moons[:,vel])
-    same_en_idx = np.argwhere(energies == new_en)
-    if  same_en_idx.size > 0:
-#        print(len(visited), same_en_idx.size)
-        for i in range(same_en_idx.size):
-            end = np.array_equal(moons, visited[:,:,same_en_idx[i]].reshape(moons.shape))
-            if end:
-                break
-    visited = np.append(visited, moons[:,:,np.newaxis].copy(), axis=2)
-    energies = np.append(energies, new_en)
+    for c in coords:
+        c_tup = tuple(moons[:,c])
+        if c_tup in V[c]:
+            repeat[c] = (V[c].index(c_tup),it)
+            coords.remove(c)
+
+        else:
+            V[c].append(c_tup)
+
+    end = len(coords) == 0
+
     it += 1
-#    if it == 2772:
-#        print(moons)
-#        print(visited[:,:,0])
-#        print(compute_energy(moons[:,pos], moons[:,vel]))
-#        print(energies[-1])
-#        print(np.array_equal(moons, visited[:,:,0]))
-#        print(end)
-#        end = True
-    if it % 10000 == 0:
+    if it == 14:
+        print(moons)
+        print(visited[:,:,0])
+        print(repeat)
+
+    if it % 1000 == 0:
         print(it)
 
 print(f'final it: {it}')
+print(f'repeats: {repeat}')

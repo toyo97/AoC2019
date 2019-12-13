@@ -1,9 +1,42 @@
 import numpy as np
-import matplotlib.pyplot as plt
+import sys
+np.set_printoptions(threshold=sys.maxsize)
+
+
+def choose_dir(table, old_xball):
+    nptable = np.array(table)
+    xball, yball = tuple(np.argwhere(nptable == '.')[0, :])
+    xpaddle, ypaddle = tuple(np.argwhere(nptable == '_')[0, :])
+
+    if old_xball > xball:
+        if xpaddle > xball:
+            dir = -1
+        elif xpaddle == xball:
+            if ypaddle - yball < 2:
+                dir = 0
+            else:
+                dir = -1
+        elif xpaddle < xball:
+            dir = 1
+    else:
+        if xpaddle > xball:
+            dir = 1
+        elif xpaddle == xball:
+            if ypaddle - yball < 2:
+                dir = 0
+            else:
+                dir = 1
+        elif xpaddle < xball:
+            dir = -1
+
+    return dir, xball
+
+def print_table(table):
+    for i in range(len(table)):
+        print("".join(table[i]) + '\n')
 
 def norm(v):
     return abs(v[0]) + abs(v[1])
-
 
 def plot(table, colored):
     # top-left corner and bottom-right corner
@@ -19,7 +52,15 @@ def plot(table, colored):
 prog = list(map(int, open('13.in').read().strip().split(',')))
 prog.extend([0]*100000)
 
-table = np.zeros((100,100))
+table = [[' '] * 45 for _ in range(20)]
+
+oldx = 0
+
+M = [' ', '|', '#', '_', '.']
+J = {'a': -1, 's': 0, 'd': 1}
+
+# play for free
+prog[0] = 2
 
 out = []
 i = 0
@@ -42,7 +83,14 @@ while not end:
 
 # Opcode matching
         if opcode == '03':
-            prog[idx] = int(input('Type input: '))
+            print_table(table)
+            prog[idx], oldx = choose_dir(table, oldx)
+#            inp = ''
+#            while inp not in J.keys():
+#                inp = input('')
+
+#            prog[idx] = int(J[inp])
+#            inp = ''
 #            print(f'color: {prog[idx]}')
 
         elif opcode == '04':
@@ -52,7 +100,10 @@ while not end:
                 c = out.pop(0)
                 r = out.pop(0)
                 s = out.pop(0)
-                table[r,c] = s
+                if c == -1 and r == 0:
+                    print(s)
+                else:
+                    table[r][c] = M[s]
 
         elif opcode == '09':
             base += prog[idx]
@@ -108,4 +159,3 @@ while not end:
             print(f'Unknown opcode {opcode}')
 
 
-print(np.sum(table == 2))

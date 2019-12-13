@@ -1,34 +1,27 @@
 import numpy as np
 import sys
+from time import sleep
+
 np.set_printoptions(threshold=sys.maxsize)
 
 
 def choose_dir(table, old_xball):
     nptable = np.array(table)
-    xball, yball = tuple(np.argwhere(nptable == '.')[0, :])
-    xpaddle, ypaddle = tuple(np.argwhere(nptable == '_')[0, :])
+    yball, xball = tuple(np.argwhere(nptable == '.')[0, :])
+    ypaddle, xpaddle = tuple(np.argwhere(nptable == '_')[0, :])
 
     if old_xball > xball:
-        if xpaddle > xball:
-            dir = -1
-        elif xpaddle == xball:
-            if ypaddle - yball < 2:
-                dir = 0
-            else:
-                dir = -1
-        elif xpaddle < xball:
-            dir = 1
+        bdir = -1
     else:
-        if xpaddle > xball:
-            dir = 1
-        elif xpaddle == xball:
-            if ypaddle - yball < 2:
-                dir = 0
-            else:
-                dir = 1
-        elif xpaddle < xball:
-            dir = -1
-
+        bdir = 1
+    xfuture = xball + bdir
+    if xfuture == xpaddle or (abs(xfuture-xpaddle) == 1 and ypaddle - yball == 1):
+        dir = 0
+    elif xfuture < xpaddle:
+        dir = -1
+    else:
+        dir = 1
+    print(f'ball {xball, yball} paddle {xpaddle, ypaddle} xfuture {xfuture}')
     return dir, xball
 
 def print_table(table):
@@ -85,10 +78,11 @@ while not end:
         if opcode == '03':
             print_table(table)
             prog[idx], oldx = choose_dir(table, oldx)
+            sleep(0.01)
 #            inp = ''
 #            while inp not in J.keys():
 #                inp = input('')
-
+#
 #            prog[idx] = int(J[inp])
 #            inp = ''
 #            print(f'color: {prog[idx]}')

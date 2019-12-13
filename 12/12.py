@@ -37,7 +37,8 @@ for i,line in enumerate(lines):
         coords[j] = int(coords[j].strip('xyz<>='))
     moons[i, pos] = np.array(coords)
 
-visited = moons[:,:,np.newaxis].copy()
+visited = moons.copy()[:,:,np.newaxis]
+print(visited[:,:,0])
 end = [False, False, False]
 
 periods = np.zeros((3,2))
@@ -48,17 +49,26 @@ while not all(end):
     moons[:,vel] += compute_gravity(moons)
     moons[:,pos] += moons[:,vel]
 
-    for i in range(visited.shape[2]):
-        for k in range(3):
-            if not end[k] and np.array_equal(moons[:,[k,k+3]], visited[:,:,i].reshape(moons.shape)[:,[k, k+3]]):
 
-                periods[k,:] = np.array([i, it+1])
-                end[k] = True
+    for k in range(3):
+#        print(moons[:,[k,k+3]])
+#        print(visited)
+#        print(visited[:,[k,k+3],0].transpose((2,0,1)))
+        eq = np.all(moons[:,[k,k+3]] == visited[:,[k,k+3],:].transpose((2,0,1)), axis=(1,2))
+#        print(eq.size)
+        if not end[k] and np.any(eq):
+            i = np.argwhere(eq)
+            periods[k,:] = np.array([i, it+1])
+            end[k] = True
 
-    visited = np.append(visited, moons[:,:,np.newaxis].copy(), axis=2)
+    visited = np.append(visited, moons[:,:,np.newaxis].copy(), axis=-1)
+    if it == 0:
+        print(visited)
+        print(visited[:,[0,3],:].transpose((2,0,1)))
+        print(np.all(visited[:,[0,3],:].transpose((2,0,1)) == moons[:,[0,3]], axis=(1,2)))
     it += 1
     if it % 100 == 0:
-        print(it, visited.shape[2])
+        print(it)
 
 print(f'final it: {it}')
 print(periods)

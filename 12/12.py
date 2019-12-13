@@ -15,7 +15,16 @@ def compute_energy(P, V):
     kin = np.sum(np.abs(V), axis=1)
     return np.sum(pot*kin)
 
-lines = open('test12_2.in').read().strip().split('\n')
+def mcm(nums, offset):
+    v = offset + nums
+    while not np.all(v == v[0]):
+        i = np.argmin(v)
+        v[i] += nums[i]
+
+    return v[0]
+
+
+lines = open('12.in').read().strip().split('\n')
 
 pos = [0,1,2]
 vel = [3,4,5]
@@ -28,36 +37,34 @@ for i,line in enumerate(lines):
         coords[j] = int(coords[j].strip('xyz<>='))
     moons[i, pos] = np.array(coords)
 
-energies = compute_energy(moons[:,pos], moons[:,vel])
 visited = moons[:,:,np.newaxis].copy()
-end = False
+end = [False, False, False]
 
+periods = np.zeros((3,2))
 it = 0
-while not end:
+
+while not all(end):
 
     moons[:,vel] += compute_gravity(moons)
     moons[:,pos] += moons[:,vel]
 
-    new_en = compute_energy(moons[:,pos], moons[:,vel])
-    same_en_idx = np.argwhere(energies == new_en)
-    if  same_en_idx.size > 0:
-#        print(len(visited), same_en_idx.size)
-        for i in range(same_en_idx.size):
-            end = np.array_equal(moons, visited[:,:,same_en_idx[i]].reshape(moons.shape))
-            if end:
-                break
+    for i in range(visited.shape[2]):
+        for k in range(3):
+            if not end[k] and np.array_equal(moons[:,[k,k+3]], visited[:,:,i].reshape(moons.shape)[:,[k, k+3]]):
+
+                periods[k,:] = np.array([i, it+1])
+                end[k] = True
+
     visited = np.append(visited, moons[:,:,np.newaxis].copy(), axis=2)
-    energies = np.append(energies, new_en)
     it += 1
-#    if it == 2772:
-#        print(moons)
-#        print(visited[:,:,0])
-#        print(compute_energy(moons[:,pos], moons[:,vel]))
-#        print(energies[-1])
-#        print(np.array_equal(moons, visited[:,:,0]))
-#        print(end)
-#        end = True
-    if it % 10000 == 0:
-        print(it)
+    if it % 100 == 0:
+        print(it, visited.shape[2])
 
 print(f'final it: {it}')
+print(periods)
+
+print(mcm(periods[:,1] - periods[:,0], periods[:,0]))
+
+
+
+

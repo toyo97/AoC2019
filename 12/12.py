@@ -15,7 +15,16 @@ def compute_energy(P, V):
     kin = np.sum(np.abs(V), axis=1)
     return np.sum(pot*kin)
 
-lines = open('test12_2.in').read().strip().split('\n')
+def mcm(nums, offset):
+    v = offset + nums
+    while not np.all(v == v[0]):
+        i = np.argmin(v)
+        v[i] += nums[i]
+
+    return v[0]
+
+
+lines = open('12.in').read().strip().split('\n')
 
 pos = [0,1,2]
 vel = [3,4,5]
@@ -28,40 +37,39 @@ for i,line in enumerate(lines):
         coords[j] = int(coords[j].strip('xyz<>='))
     moons[i, pos] = np.array(coords)
 
-visited = moons[:,:,np.newaxis].copy()
-end = False
+visited = moons.copy()[:,:,np.newaxis]
+print(visited[:,:,0])
+end = [False, False, False]
 
-repeat = [(0,0) for _ in range(3)]
-
+periods = np.zeros((3,2))
 it = 0
 
-coords = [0,1,2]
-V = [[],[],[]]
-
-while not end:
+while not all(end):
 
     moons[:,vel] += compute_gravity(moons)
     moons[:,pos] += moons[:,vel]
 
-    for c in coords:
-        c_tup = tuple(moons[:,c])
-        if c_tup in V[c]:
-            repeat[c] = (V[c].index(c_tup),it)
-            coords.remove(c)
+    for k in range(3):
+#        print(moons[:,[k,k+3]])
+#        print(visited)
+#        print(visited[:,[k,k+3],0].transpose((2,0,1)))
+        eq = np.all(moons[:,[k,k+3]] == visited[:,[k,k+3],:].transpose((2,0,1)), axis=(1,2))
+#        print(eq.size)
+        if not end[k] and np.any(eq):
+            i = np.argwhere(eq)
+            periods[k,:] = np.array([i, it+1])
+            end[k] = True
 
-        else:
-            V[c].append(c_tup)
-
-    end = len(coords) == 0
-
+    visited = np.append(visited, moons[:,:,np.newaxis].copy(), axis=-1)
+    if it == 0:
+        print(visited)
+        print(visited[:,[0,3],:].transpose((2,0,1)))
+        print(np.all(visited[:,[0,3],:].transpose((2,0,1)) == moons[:,[0,3]], axis=(1,2)))
     it += 1
-    if it == 14:
-        print(moons)
-        print(visited[:,:,0])
-        print(repeat)
-
-    if it % 1000 == 0:
+    if it % 100 == 0:
         print(it)
 
 print(f'final it: {it}')
-print(f'repeats: {repeat}')
+print(periods)
+
+print(mcm(periods[:,1] - periods[:,0], periods[:,0]))
